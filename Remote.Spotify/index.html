@@ -1,0 +1,90 @@
+<html>
+    <head>
+        <style type="text/css">
+            body {
+                margin: 20px;
+                font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;}
+            h1 {font-size: 2em;}
+            h3 {font-size: 1.4em;margin: 0 0 10px 0;}
+            small {font-size: 0.4em; color: #808080;}
+            .track {padding: 10px; background: #e1dbdb; margin: 10px;width: 400px;}
+            img {float: left;margin-right: 10px;}
+            p {font-size: 0.8em;display: block;margin: 0;}
+            p.album {font-size: 0.7em;font-style: italic;}
+            p small {font-size: 0.9em;}
+        </style>
+    </head>
+    <body>
+        <script src="http://code.jquery.com/jquery-1.8.2.min.js" type="text/javascript"></script>
+        <script src="http://localhost:999/jquery.signalR-1.1.2.min.js" type="text/javascript"></script>
+        <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js" type="text/javascript"></script>
+    
+        <script src="http://localhost:999/signalr/hubs" type="text/javascript"></script>
+        <script type="text/javascript">
+            $(function () {
+                var playback = $.connection.spotify;
+
+                playback.client.UpdateStatus = function (status) {
+                    console.log(status);
+                    vm.update(status);
+                };
+
+                var vm = new Spotify.TrackModel();
+                ko.applyBindings(vm);
+
+                $.connection.hub.start().done(function () {
+                    console.log("running!");
+                });
+            });
+
+            var Spotify = Spotify || {};
+            Spotify.TrackModel = function() {
+                var self = this;
+
+                self.currentPlayback = ko.observable(0);
+                self.totalPlayback = ko.observable(100);
+                self.progress = ko.computed(function() {
+                    return Math.round(self.currentPlayback() * 100 / self.totalPlayback());
+                });
+
+                self.title = ko.observable("");
+                self.artist = ko.observable("");
+                self.art = ko.observable("");
+                self.album = ko.observable("");
+                self.isPlaying = ko.observable(false);
+
+                self.update = function(status) {
+                    self.currentPlayback(parseInt(status.playing_position,"10"));
+                    self.totalPlayback(parseInt(status.track.length, "10"));
+                    self.title(status.track.track_resource.name);
+                    self.artist(status.track.artist_resource.name);
+                    self.album(status.track.album_resource.name);
+                    self.art(status.ArtSmall);
+                    self.isPlaying(status.playing);
+                };
+
+                self.resume = function() {
+                    $.post("http://localhost:999/api/playback/resume", function(status) {
+                        self.isPlaying(status.playing);
+                    });
+                };
+            
+                self.pause = function () {
+                    $.post("http://localhost:999/api/playback/pause", function (status) {
+                        self.isPlaying(status.playing);
+                    });
+                };
+            };
+        </script>
+  
+        <div class="track">
+            <h3 data-bind="text: title"></h3>
+            <a data-bind="attr: {href: art}"><img data-bind="attr: {src: art}" height="61" width="61" /></a>
+            <p data-bind="text: artist"></p>
+            <p data-bind="text: album"></p>
+            <p><small>Played: <span data-bind="text: progress"></span>%</small></p>
+            <button data-bind="click: resume, visible: isPlaying() == false">Resume</button>
+            <button data-bind="click: pause, visible: isPlaying() == true">Pause</button>
+        </div>
+    </body>
+</html>
