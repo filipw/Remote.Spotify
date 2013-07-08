@@ -2,7 +2,7 @@
 using Microsoft.Owin.Hosting;
 
 namespace Remote.Spotify
-{
+{  
     internal class Program
     {
         private static void Main(string[] args)

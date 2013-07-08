@@ -6,12 +6,11 @@
                 font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;}
             h1 {font-size: 2em;}
             h3 {font-size: 1.4em;margin: 0 0 10px 0;}
-            small {font-size: 0.4em; color: #808080;}
             .track {padding: 10px; background: #e1dbdb; margin: 10px;width: 400px;}
             img {float: left;margin-right: 10px;}
-            p {font-size: 0.8em;display: block;margin: 0;}
-            p.album {font-size: 0.7em;font-style: italic;}
-            p small {font-size: 0.9em;}
+            p {font-size: 1.2em;display: block;margin: 0;}
+            p.album {font-size: 1em;font-style: italic;margin-top: 8px;}
+            .buttons { clear: both;padding: 8px; }
         </style>
     </head>
     <body>
@@ -41,50 +40,62 @@
             Spotify.TrackModel = function() {
                 var self = this;
 
-                self.currentPlayback = ko.observable(0);
-                self.totalPlayback = ko.observable(100);
-                self.progress = ko.computed(function() {
-                    return Math.round(self.currentPlayback() * 100 / self.totalPlayback());
-                });
-
                 self.title = ko.observable("");
                 self.artist = ko.observable("");
                 self.art = ko.observable("");
                 self.album = ko.observable("");
-                self.isPlaying = ko.observable(false);
+                self.isPlaying = ko.observable(true);
 
-                self.update = function(status) {
-                    self.currentPlayback(parseInt(status.playing_position,"10"));
-                    self.totalPlayback(parseInt(status.track.length, "10"));
-                    self.title(status.track.track_resource.name);
-                    self.artist(status.track.artist_resource.name);
-                    self.album(status.track.album_resource.name);
-                    self.art(status.ArtSmall);
-                    self.isPlaying(status.playing);
+                self.update = function (status) {
+                    self.title(status.track.name);
+                    self.isPlaying(status.isPlaying);
+
+                    if (status.track.artist != undefined)
+                        self.artist(status.track.artist.name);
+                    else
+                        self.artist("Unknown artist");
+
+                    if (status.track.album != undefined) {
+                        self.album(status.track.album.title);
+                        if (status.track.album.image != undefined && status.track.album.image.length > 0) {
+                            self.art(status.track.album.image[0].Value);
+                        }
+                    } else {
+                        self.album("Unknown album");
+                    }
                 };
 
                 self.resume = function() {
-                    $.post("http://localhost:999/api/playback/resume", function(status) {
-                        self.isPlaying(status.playing);
-                    });
+                    $.post("http://localhost:999/api/playback/resume");
+                    self.isPlaying(true);
                 };
             
                 self.pause = function () {
-                    $.post("http://localhost:999/api/playback/pause", function (status) {
-                        self.isPlaying(status.playing);
-                    });
+                    $.post("http://localhost:999/api/playback/pause");
+                    self.isPlaying(false);
+                };
+
+                self.next = function () {
+                    $.post("http://localhost:999/api/playback/next");
+                };
+
+                self.previous = function () {
+                    $.post("http://localhost:999/api/playback/previous");
                 };
             };
         </script>
   
         <div class="track">
             <h3 data-bind="text: title"></h3>
-            <a data-bind="attr: {href: art}"><img data-bind="attr: {src: art}" height="61" width="61" /></a>
+            <a data-bind="attr: {href: art}"><img data-bind="attr: {src: art}" height="100" width="100" /></a>
             <p data-bind="text: artist"></p>
-            <p data-bind="text: album"></p>
-            <p><small>Played: <span data-bind="text: progress"></span>%</small></p>
-            <button data-bind="click: resume, visible: isPlaying() == false">Resume</button>
-            <button data-bind="click: pause, visible: isPlaying() == true">Pause</button>
+            <p class="album" data-bind="text: album"></p>
+            <div class="buttons">
+                <button data-bind="click: resume, visible: isPlaying() == false">Resume</button>
+                <button data-bind="click: pause, visible: isPlaying() == true">Pause</button>
+                <button data-bind="click: previous">Previous</button>
+                <button data-bind="click: next">Next</button>
+            </div>
         </div>
     </body>
 </html>
