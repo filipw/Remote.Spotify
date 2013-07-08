@@ -97,6 +97,7 @@
     <Compile Include="Infrastructure\TrackInfo.cs" />
     <Compile Include="Infrastructure\SpotifyApi.cs" />
     <Compile Include="Controller\PlaybackController.cs" />
+    <Compile Include="Models\GeneratedModels.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Infrastructure\SpotifyHub.cs" />

@@ -4,6 +4,7 @@ using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using Remote.Spotify.Models;
 using SpotifyAPI;
 
 namespace Remote.Spotify.Infrastructure
